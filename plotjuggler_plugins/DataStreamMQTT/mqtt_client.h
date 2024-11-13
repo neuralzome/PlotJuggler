@@ -4,7 +4,6 @@
 #include "mosquitto_config.h"
 #include <string>
 #include <functional>
-#include <thread>
 #include <unordered_map>
 #include <unordered_set>
 #include <mutex>
@@ -47,14 +46,11 @@ signals:
   void disconnected();
 
 private:
-  bool configureMosquitto(const MosquittoConfig& config);
-
   mosquitto* _mosq = nullptr;
   std::unordered_map<std::string, TopicCallback> _message_callbacks;
   std::unordered_set<std::string> _topics_set;
   std::mutex _mutex;
   MosquittoConfig _config;
-  std::thread _thread;
 };
 
 #endif  // MQTT_CLIENT_H

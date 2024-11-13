@@ -3,11 +3,14 @@
 #include <array>
 #include <cstdint>
 #include <cstring>
+#include <iostream>
 #include <functional>
 #include <limits>
 #include <map>
+#include <optional>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 #include <variant>
 #include <vector>
 
@@ -216,11 +219,11 @@ bool TypeField::operator==(const TypeField& other) const
 inline Schema BuilSchemaFromText(const std::string& txt)
 {
   auto trimString = [](std::string& str) {
-    while (!str.empty() && (str.back() == ' ' || str.back() == '\r'))
+    while (str.back() == ' ' || str.back() == '\r')
     {
       str.pop_back();
     }
-    while (!str.empty() && (str.front() == ' ' || str.front() == '\r'))
+    while (str.front() == ' ' || str.front() == '\r')
     {
       str.erase(0, 1);
     }
@@ -281,7 +284,7 @@ inline Schema BuilSchemaFromText(const std::string& txt)
     if (str_left == "### hash:" || str_left == "__hash__:")
     {
       // check compatibility
-      declared_schema = std::stoull(str_right);
+      declared_schema = std::stoul(str_right);
       continue;
     }
 
@@ -352,8 +355,7 @@ inline Schema BuilSchemaFromText(const std::string& txt)
   }
   if (declared_schema != 0 && declared_schema != schema.hash)
   {
-    // check temporary disabled. Requires more investigations
-    // throw std::runtime_error("Error in hash calculation");
+    throw std::runtime_error("Error in hash calculation");
   }
   return schema;
 }

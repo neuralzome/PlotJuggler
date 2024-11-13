@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ZmqMultiConnectPlugin</class>
+ <widget class="QWidget" name="ZmqMultiConnectPlugin">
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="label_ports">
+     <property name="text">
+      <string>Enter ZMQ Ports (comma-separated)</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLineEdit" name="lineEdit_ports">
+     <property name="text">
+      <string>tcp://127.0.0.1:5555,tcp://127.0.0.1:5556</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="button_connect">
+     <property name="text">
+      <string>Connect</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+</ui>
