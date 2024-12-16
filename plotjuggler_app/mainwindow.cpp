@@ -49,6 +49,7 @@
 #include "PlotJuggler/svg_util.h"
 #include "PlotJuggler/reactive_function.h"
 #include "multifile_prefix.h"
+#include <zmq.hpp>
 
 #include "ui_aboutdialog.h"
 #include "ui_support_dialog.h"
@@ -81,9 +82,13 @@ MainWindow::MainWindow(const QCommandLineParser& commandline_parser, QWidget* pa
   , _labels_status(LabelStatus::RIGHT)
   , _recent_data_files(new QMenu())
   , _recent_layout_files(new QMenu())
+  , zmq_context(1)
+  , zmq_publisher(zmq_context, zmq::socket_type::pub)
 {
   QLocale::setDefault(QLocale::c());  // set as default
   setAcceptDrops(true);
+
+  zmq_publisher.bind("tcp://*:5555");
 
   _test_option = commandline_parser.isSet("test");
   _autostart_publishers = commandline_parser.isSet("publish");
@@ -392,8 +397,10 @@ MainWindow::~MainWindow()
 {
   // important: avoid problems with plugins
   _mapped_plot_data.user_defined.clear();
-
+  zmq_publisher.close(); // Close the ZMQ publisher
+  zmq_context.close();
   delete ui;
+  
 }
 
 void MainWindow::onUndoableChange()
@@ -468,10 +475,26 @@ void MainWindow::onTrackerMovedFromWidget(QPointF relative_pos)
   onTrackerTimeUpdated(_tracker_time, true);
 }
 
+void MainWindow::publishFormattedTime(const QString& formatted_time)
+{
+    std::string time_message = formatted_time.toStdString();
+
+    zmq::message_t message(time_message.begin(), time_message.end());
+    zmq_publisher.send(message, zmq::send_flags::none);
+
+    qDebug() << "Published time:" << formatted_time;
+}
+
 void MainWindow::onTimeSlider_valueChanged(double abs_time)
 {
   _tracker_time = abs_time;
   onTrackerTimeUpdated(_tracker_time, true);
+  if (ui->timefb_checkBox->isChecked())
+  {
+    QDateTime dateTime = QDateTime::fromSecsSinceEpoch(static_cast<qint64>(_tracker_time));
+    QString formattedTime = dateTime.toString("yyyy-MM-dd HH:mm:ss");
+    publishFormattedTime(formattedTime);
+  }
 }
 
 void MainWindow::onTrackerTimeUpdated(double absolute_time, bool do_replot)

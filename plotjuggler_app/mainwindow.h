@@ -32,6 +32,8 @@
 #include "transforms/custom_function.h"
 #include "transforms/function_editor.h"
 
+#include "zmq.hpp"
+
 #include "ui_mainwindow.h"
 
 class MainWindow : public QMainWindow
@@ -53,6 +55,9 @@ public:
   void enableStreamingNotificationsButton(bool enabled);
 
   void setStatusBarMessage(QString message);
+
+  void publishFormattedTime();
+
 
 public slots:
 
@@ -181,8 +186,14 @@ private:
 
   QString _skin_path;
 
+  zmq::context_t zmq_context;       // ZMQ context
+  zmq::socket_t zmq_publisher;     // ZMQ publisher socket
+
+
   void initializeActions();
   QStringList initializePlugins(QString subdir_name);
+
+  void publishFormattedTime(const QString& formatted_time);
 
   void forEachWidget(std::function<void(PlotWidget*, PlotDocker*, int)> op);
   void forEachWidget(std::function<void(PlotWidget*)> op);
