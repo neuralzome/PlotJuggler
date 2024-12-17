@@ -1844,7 +1844,7 @@
                   <item>
                    <widget class="QCheckBox" name="timefb_checkBox">
                     <property name="text">
-                     <string>Time fb</string>
+                     <string>Timestamp Repub</string>
                     </property>
                    </widget>
                   </item>
