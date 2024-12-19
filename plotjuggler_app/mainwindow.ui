@@ -150,6 +150,7 @@
              <property name="font">
               <font>
                <pointsize>9</pointsize>
+               <weight>50</weight>
                <bold>false</bold>
               </font>
              </property>
@@ -532,6 +533,7 @@
              <property name="font">
               <font>
                <pointsize>9</pointsize>
+               <weight>50</weight>
                <bold>false</bold>
               </font>
              </property>
@@ -942,6 +944,7 @@
              <property name="font">
               <font>
                <pointsize>9</pointsize>
+               <weight>50</weight>
                <bold>false</bold>
               </font>
              </property>
@@ -1751,6 +1754,7 @@
                    <widget class="QLabel" name="label">
                     <property name="font">
                      <font>
+                      <weight>75</weight>
                       <bold>true</bold>
                      </font>
                     </property>
@@ -1800,6 +1804,7 @@
                    <widget class="QLabel" name="label_2">
                     <property name="font">
                      <font>
+                      <weight>75</weight>
                       <bold>true</bold>
                      </font>
                     </property>
@@ -1833,6 +1838,13 @@
                     </property>
                     <property name="singleStep">
                      <double>0.100000000000000</double>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QCheckBox" name="timefb_checkBox">
+                    <property name="text">
+                     <string>Timestamp Repub</string>
                     </property>
                    </widget>
                   </item>
@@ -1945,7 +1957,7 @@
      <x>0</x>
      <y>0</y>
      <width>1058</width>
-     <height>26</height>
+     <height>25</height>
     </rect>
    </property>
    <property name="minimumSize">

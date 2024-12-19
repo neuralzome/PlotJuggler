@@ -6,7 +6,8 @@
 
 #include <functional>
 #include <stdio.h>
-
+#include <iomanip>  
+#include <sstream>
 #include <QApplication>
 #include <QActionGroup>
 #include <QCheckBox>
@@ -49,6 +50,7 @@
 #include "PlotJuggler/svg_util.h"
 #include "PlotJuggler/reactive_function.h"
 #include "multifile_prefix.h"
+#include <zmq.hpp>
 
 #include "ui_aboutdialog.h"
 #include "ui_support_dialog.h"
@@ -81,9 +83,13 @@ MainWindow::MainWindow(const QCommandLineParser& commandline_parser, QWidget* pa
   , _labels_status(LabelStatus::RIGHT)
   , _recent_data_files(new QMenu())
   , _recent_layout_files(new QMenu())
+  , zmq_context(1)
+  , zmq_publisher(zmq_context, zmq::socket_type::pub)
 {
   QLocale::setDefault(QLocale::c());  // set as default
   setAcceptDrops(true);
+
+  zmq_publisher.bind("tcp://*:5555");
 
   _test_option = commandline_parser.isSet("test");
   _autostart_publishers = commandline_parser.isSet("publish");
@@ -392,8 +398,10 @@ MainWindow::~MainWindow()
 {
   // important: avoid problems with plugins
   _mapped_plot_data.user_defined.clear();
-
+  zmq_publisher.close(); // Close the ZMQ publisher
+  zmq_context.close();
   delete ui;
+  
 }
 
 void MainWindow::onUndoableChange()
@@ -460,7 +468,6 @@ void MainWindow::onUpdateLeftTableValues()
 void MainWindow::onTrackerMovedFromWidget(QPointF relative_pos)
 {
   _tracker_time = relative_pos.x() + _time_offset.get();
-
   auto prev = ui->timeSlider->blockSignals(true);
   ui->timeSlider->setRealValue(_tracker_time);
   ui->timeSlider->blockSignals(prev);
@@ -468,10 +475,23 @@ void MainWindow::onTrackerMovedFromWidget(QPointF relative_pos)
   onTrackerTimeUpdated(_tracker_time, true);
 }
 
+void MainWindow::publishFormattedTime(const QString& formatted_time)
+{
+  zmq::message_t message(formatted_time.toUtf8().data(), formatted_time.toUtf8().size());
+  zmq_publisher.send(message, zmq::send_flags::none);
+  qDebug() << "Published data:" << formatted_time;
+}
+
 void MainWindow::onTimeSlider_valueChanged(double abs_time)
 {
   _tracker_time = abs_time;
   onTrackerTimeUpdated(_tracker_time, true);
+  if (ui->timefb_checkBox->isChecked())
+  {
+    //  QDateTime dateTime = QDateTime::fromMSecsSinceEpoch(std::round(_tracker_time * 1000.0));
+    // QString formattedTime = dateTime.toString("[yyyy MMM dd] HH:mm::ss.zzz");
+    //publishFormattedTime(_tracker_time);
+  }
 }
 
 void MainWindow::onTrackerTimeUpdated(double absolute_time, bool do_replot)
@@ -481,6 +501,7 @@ void MainWindow::onTrackerTimeUpdated(double absolute_time, bool do_replot)
   for (auto& it : _state_publisher)
   {
     it.second->updateState(absolute_time);
+    
   }
 
   updateReactivePlots();
@@ -2544,7 +2565,14 @@ void MainWindow::updatedDisplayTime()
   }
   else
   {
+    //publishFormattedTime(_tracker_time);
     timeLine->setText(QString::number(relative_time, 'f', 3));
+    QString time_repub = QString::number(relative_time, 'f', 3);
+    if (ui->timefb_checkBox->isChecked())
+    {
+      publishFormattedTime(time_repub);
+      //qDebug() << "Published relative time:" << QString::number(relative_time, 'f', 3);
+    }
   }
 
   QFontMetrics fm(timeLine->font());

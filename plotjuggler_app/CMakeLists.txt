@@ -6,6 +6,7 @@ include_directories( ./ ../  ../include )
 
 QT5_ADD_RESOURCES (RES_SRC  resource.qrc )
 
+
 QT5_WRAP_UI ( UI_SRC
     aboutdialog.ui
     mainwindow.ui
@@ -111,6 +112,8 @@ if (NOT WIN32)
     add_backward(plotjuggler)
 endif()
 
+find_package(ZeroMQ REQUIRED)
+
 target_link_libraries(plotjuggler
     ${QT_LINK_LIBRARIES}
     colorwidgets
@@ -119,6 +122,7 @@ target_link_libraries(plotjuggler
     plotjuggler_base
     plotjuggler_qwt
     QCodeEditor
+    zmq
     )
 
 if(COMPILING_WITH_CATKIN)
