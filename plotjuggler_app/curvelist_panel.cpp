@@ -278,6 +278,7 @@ bool CurveListPanel::is2ndColumnHidden() const
 void CurveListPanel::update2ndColumnValues(double tracker_time)
 {
   _tracker_time = tracker_time;
+  qDebug()<< "tracker time" << _tracker_time;
   refreshValues();
 }
 

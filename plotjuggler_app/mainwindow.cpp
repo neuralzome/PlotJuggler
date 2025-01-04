@@ -50,7 +50,10 @@
 #include "PlotJuggler/svg_util.h"
 #include "PlotJuggler/reactive_function.h"
 #include "multifile_prefix.h"
+
 #include <zmq.hpp>
+#include "zenoh.hxx"
+#include <nlohmann/json.hpp>
 
 #include "ui_aboutdialog.h"
 #include "ui_support_dialog.h"
@@ -58,6 +61,7 @@
 #include "nlohmann_parsers.h"
 #include "cheatsheet/cheatsheet_dialog.h"
 #include "colormap_editor.h"
+#define ZENOHCXX_ZENOHC
 
 #ifdef COMPILED_WITH_CATKIN
 
@@ -66,6 +70,9 @@
 #include <ament_index_cpp/get_package_prefix.hpp>
 #include <ament_index_cpp/get_package_share_directory.hpp>
 #endif
+
+using namespace zenoh;
+
 
 MainWindow::MainWindow(const QCommandLineParser& commandline_parser, QWidget* parent)
   : QMainWindow(parent)
@@ -84,20 +91,22 @@ MainWindow::MainWindow(const QCommandLineParser& commandline_parser, QWidget* pa
   , _recent_data_files(new QMenu())
   , _recent_layout_files(new QMenu())
   , zmq_context(1)
-  , zmq_publisher(zmq_context, zmq::socket_type::pub)
+  , zmq_publisher(zmq_context, zmq::socket_type::pub
+  )
 {
   QLocale::setDefault(QLocale::c());  // set as default
   setAcceptDrops(true);
 
   zmq_publisher.bind("tcp://*:5555");
-
+  session_ = std::make_unique<zenoh::Session>(zenoh::expect<zenoh::Session>(zenoh::open(std::move(conf_))));
+  pub_ = std::make_unique<zenoh::Publisher>(zenoh::expect<zenoh::Publisher>(session_->declare_publisher(zenoh::KeyExprView("time"))));
   _test_option = commandline_parser.isSet("test");
   _autostart_publishers = commandline_parser.isSet("publish");
 
   if (commandline_parser.isSet("enabled_plugins"))
   {
     _enabled_plugins =
-        commandline_parser.value("enabled_plugins").split(";", PJ::SkipEmptyParts);
+        commandline_parser.value("enabled plugins").split(";", PJ::SkipEmptyParts);
     // Treat the command-line parameter  '--enabled_plugins *' to mean all plugings are
     // enabled
     if ((_enabled_plugins.size() == 1) && (_enabled_plugins.contains("*")))
@@ -400,6 +409,7 @@ MainWindow::~MainWindow()
   _mapped_plot_data.user_defined.clear();
   zmq_publisher.close(); // Close the ZMQ publisher
   zmq_context.close();
+  this->pub_->delete_resource();
   delete ui;
   
 }
@@ -475,19 +485,42 @@ void MainWindow::onTrackerMovedFromWidget(QPointF relative_pos)
   onTrackerTimeUpdated(_tracker_time, true);
 }
 
-void MainWindow::publishFormattedTime(const QString& formatted_time)
+void MainWindow::publishFormattedTime(uint64_t seconds, uint64_t nanoseconds)
 {
-  zmq::message_t message(formatted_time.toUtf8().data(), formatted_time.toUtf8().size());
-  zmq_publisher.send(message, zmq::send_flags::none);
-  qDebug() << "Published data:" << formatted_time;
+  nlohmann::json jsonData;
+  jsonData["seconds"] = seconds;
+  jsonData["nanoseconds"] = nanoseconds;
+  std::string serializedData = jsonData.dump();
+  if (pub_ == nullptr) {
+    qDebug() << "Publisher is not initialized!";}
+  else
+  {
+    pub_->put(serializedData);
+    qDebug() << "Published time: seconds =" << seconds << ", nanoseconds =" << nanoseconds;
+  }
+  // zmq::message_t message(formatted_time.toUtf8().data(), formatted_time.toUtf8().size());
+  // zmq_publisher.send(message, zmq::send_flags::none);
+  // qDebug() << "Published data:" << formatted_time;
 }
 
 void MainWindow::onTimeSlider_valueChanged(double abs_time)
 {
   _tracker_time = abs_time;
   onTrackerTimeUpdated(_tracker_time, true);
+  QLineEdit* timeLine = ui->displayTime;
+  const double relative_time = _tracker_time - _time_offset.get();
+  //qDebug() << " relative time" <<relative_time;
+  timeLine->setText(QString::number(relative_time, 'f', 3));
+  QString time_repub = QString::number(relative_time, 'f', 3);
+  double time_in_s = time_repub.toDouble();
+  // qDebug() << " time in s" <<time_in_s;
+  // qDebug() << " time repub" <<time_repub;
+  uint64_t seconds = static_cast<uint64_t>(time_in_s); 
+  // qDebug() << "s   " <<seconds; 
+  uint64_t nanoseconds = static_cast<uint64_t>((relative_time - seconds));
   if (ui->timefb_checkBox->isChecked())
   {
+    publishFormattedTime(seconds,nanoseconds);
     //  QDateTime dateTime = QDateTime::fromMSecsSinceEpoch(std::round(_tracker_time * 1000.0));
     // QString formattedTime = dateTime.toString("[yyyy MMM dd] HH:mm::ss.zzz");
     //publishFormattedTime(_tracker_time);
@@ -501,6 +534,7 @@ void MainWindow::onTrackerTimeUpdated(double absolute_time, bool do_replot)
   for (auto& it : _state_publisher)
   {
     it.second->updateState(absolute_time);
+    qDebug()<< absolute_time;
     
   }
 
@@ -1373,7 +1407,6 @@ void MainWindow::importPlotDataMap(PlotDataMapRef& new_data, bool remove_old)
 
   auto [added_curves, curve_updated, data_pushed] =
       MoveData(new_data, _mapped_plot_data, remove_old);
-
   for (const auto& added_curve : added_curves)
   {
     _curvelist_widget->addCurve(added_curve);
@@ -2565,12 +2598,18 @@ void MainWindow::updatedDisplayTime()
   }
   else
   {
+    QLineEdit* timeLine = ui->displayTime;
+    const double relative_time = _tracker_time - _time_offset.get();
+
     //publishFormattedTime(_tracker_time);
     timeLine->setText(QString::number(relative_time, 'f', 3));
     QString time_repub = QString::number(relative_time, 'f', 3);
+    double time_in_ns = time_repub.toDouble();
+    uint64_t seconds = static_cast<uint64_t>(time_in_ns / 1e9);  
+    uint64_t nanoseconds = static_cast<uint64_t>((time_in_ns - seconds * 1e9));
     if (ui->timefb_checkBox->isChecked())
     {
-      publishFormattedTime(time_repub);
+      publishFormattedTime(seconds,nanoseconds);
       //qDebug() << "Published relative time:" << QString::number(relative_time, 'f', 3);
     }
   }

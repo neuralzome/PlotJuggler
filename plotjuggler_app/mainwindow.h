@@ -7,6 +7,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+
 #include <set>
 #include <deque>
 #include <functional>
@@ -33,6 +34,11 @@
 #include "transforms/function_editor.h"
 
 #include "zmq.hpp"
+
+#define ZENOHCXX_ZENOHC
+
+#include "zenoh.hxx"
+
 
 #include "ui_mainwindow.h"
 
@@ -188,12 +194,23 @@ private:
 
   zmq::context_t zmq_context;       // ZMQ context
   zmq::socket_t zmq_publisher;     // ZMQ publisher socket
+  zenoh::Config conf_;
+  
+  // this->session_ = std::make_unique<zenoh::Session>(
+  //       zenoh::expect<zenoh::Session>(zenoh::open(std::move(conf_))));
+  // this->pub_ = std::make_unique<zenoh::Publisher>(
+  //       zenoh::expect<zenoh::Publisher>(
+  //           this->session_->declare_publisher(zenoh::KeyExprView("/time"))));
+  
+  std::unique_ptr<zenoh::Session> session_;
+  std::unique_ptr<zenoh::Publisher> pub_;
+
 
 
   void initializeActions();
   QStringList initializePlugins(QString subdir_name);
 
-  void publishFormattedTime(const QString& formatted_time);
+  void publishFormattedTime(uint64_t seconds, uint64_t nanoseconds);
 
   void forEachWidget(std::function<void(PlotWidget*, PlotDocker*, int)> op);
   void forEachWidget(std::function<void(PlotWidget*)> op);

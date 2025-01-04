@@ -113,8 +113,18 @@ if (NOT WIN32)
 endif()
 
 find_package(ZeroMQ REQUIRED)
+find_package(zenohc REQUIRED)
+find_package(zenohcxx REQUIRED)
 
-target_link_libraries(plotjuggler
+# include_directories(${ZENOHC_INCLUDE_DIRS})
+# link_directories(${ZENOHC_LIBRARY_DIRS})
+
+# include_directories(${ZENOH_INCLUDE_DIRS})
+# link_directories(${ZENOH_LIBRARY_DIRS})
+# message("print ${ZENOHC_LIBRARY_DIRS}")
+
+
+target_link_libraries(plotjuggler PRIVATE
     ${QT_LINK_LIBRARIES}
     colorwidgets
     lua_static
@@ -123,6 +133,7 @@ target_link_libraries(plotjuggler
     plotjuggler_qwt
     QCodeEditor
     zmq
+    zenohcxx::zenohc::lib
     )
 
 if(COMPILING_WITH_CATKIN)
