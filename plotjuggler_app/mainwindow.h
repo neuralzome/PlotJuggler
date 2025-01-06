@@ -194,7 +194,7 @@ private:
 
   zmq::context_t zmq_context;       // ZMQ context
   zmq::socket_t zmq_publisher;     // ZMQ publisher socket
-  zenoh::Config conf_;
+  // zenoh::Config conf_;
   
   // this->session_ = std::make_unique<zenoh::Session>(
   //       zenoh::expect<zenoh::Session>(zenoh::open(std::move(conf_))));
@@ -202,8 +202,8 @@ private:
   //       zenoh::expect<zenoh::Publisher>(
   //           this->session_->declare_publisher(zenoh::KeyExprView("/time"))));
   
-  std::unique_ptr<zenoh::Session> session_;
-  std::unique_ptr<zenoh::Publisher> pub_;
+  // std::unique_ptr<zenoh::Session> session_;
+  // std::unique_ptr<zenoh::Publisher> pub_;
 
 
 

@@ -1841,13 +1841,6 @@
                     </property>
                    </widget>
                   </item>
-                  <item>
-                   <widget class="QCheckBox" name="timefb_checkBox">
-                    <property name="text">
-                     <string>Timestamp Repub</string>
-                    </property>
-                   </widget>
-                  </item>
                  </layout>
                 </widget>
                </item>
@@ -1957,7 +1950,7 @@
      <x>0</x>
      <y>0</y>
      <width>1058</width>
-     <height>25</height>
+     <height>27</height>
     </rect>
    </property>
    <property name="minimumSize">

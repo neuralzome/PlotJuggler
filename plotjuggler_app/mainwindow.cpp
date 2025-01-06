@@ -98,8 +98,8 @@ MainWindow::MainWindow(const QCommandLineParser& commandline_parser, QWidget* pa
   setAcceptDrops(true);
 
   zmq_publisher.bind("tcp://*:5555");
-  session_ = std::make_unique<zenoh::Session>(zenoh::expect<zenoh::Session>(zenoh::open(std::move(conf_))));
-  pub_ = std::make_unique<zenoh::Publisher>(zenoh::expect<zenoh::Publisher>(session_->declare_publisher(zenoh::KeyExprView("time"))));
+  // session_ = std::make_unique<zenoh::Session>(zenoh::expect<zenoh::Session>(zenoh::open(std::move(conf_))));
+  // pub_ = std::make_unique<zenoh::Publisher>(zenoh::expect<zenoh::Publisher>(session_->declare_publisher(zenoh::KeyExprView("time"))));
   _test_option = commandline_parser.isSet("test");
   _autostart_publishers = commandline_parser.isSet("publish");
 
@@ -409,7 +409,7 @@ MainWindow::~MainWindow()
   _mapped_plot_data.user_defined.clear();
   zmq_publisher.close(); // Close the ZMQ publisher
   zmq_context.close();
-  this->pub_->delete_resource();
+  // this->pub_->delete_resource();
   delete ui;
   
 }
@@ -488,16 +488,16 @@ void MainWindow::onTrackerMovedFromWidget(QPointF relative_pos)
 void MainWindow::publishFormattedTime(uint64_t seconds, uint64_t nanoseconds)
 {
   nlohmann::json jsonData;
-  jsonData["seconds"] = seconds;
+  // jsonData["seconds"] = seconds;
   jsonData["nanoseconds"] = nanoseconds;
-  std::string serializedData = jsonData.dump();
-  if (pub_ == nullptr) {
-    qDebug() << "Publisher is not initialized!";}
-  else
-  {
-    pub_->put(serializedData);
-    qDebug() << "Published time: seconds =" << seconds << ", nanoseconds =" << nanoseconds;
-  }
+  // std::string serializedData = jsonData.dump();
+  // if (pub_ == nullptr) {
+  //   qDebug() << "Publisher is not initialized!";}
+  // else
+  // {
+  //   pub_->put(serializedData);
+  //   qDebug() << "Published time: seconds =" << seconds << ", nanoseconds =" << nanoseconds;
+  // }
   // zmq::message_t message(formatted_time.toUtf8().data(), formatted_time.toUtf8().size());
   // zmq_publisher.send(message, zmq::send_flags::none);
   // qDebug() << "Published data:" << formatted_time;
@@ -518,13 +518,13 @@ void MainWindow::onTimeSlider_valueChanged(double abs_time)
   uint64_t seconds = static_cast<uint64_t>(time_in_s); 
   // qDebug() << "s   " <<seconds; 
   uint64_t nanoseconds = static_cast<uint64_t>((relative_time - seconds));
-  if (ui->timefb_checkBox->isChecked())
-  {
-    publishFormattedTime(seconds,nanoseconds);
+  // if (ui->timefb_checkBox->isChecked())
+  // {
+    // publishFormattedTime(seconds,nanoseconds);
     //  QDateTime dateTime = QDateTime::fromMSecsSinceEpoch(std::round(_tracker_time * 1000.0));
     // QString formattedTime = dateTime.toString("[yyyy MMM dd] HH:mm::ss.zzz");
     //publishFormattedTime(_tracker_time);
-  }
+  // }
 }
 
 void MainWindow::onTrackerTimeUpdated(double absolute_time, bool do_replot)
@@ -2607,11 +2607,11 @@ void MainWindow::updatedDisplayTime()
     double time_in_ns = time_repub.toDouble();
     uint64_t seconds = static_cast<uint64_t>(time_in_ns / 1e9);  
     uint64_t nanoseconds = static_cast<uint64_t>((time_in_ns - seconds * 1e9));
-    if (ui->timefb_checkBox->isChecked())
-    {
-      publishFormattedTime(seconds,nanoseconds);
-      //qDebug() << "Published relative time:" << QString::number(relative_time, 'f', 3);
-    }
+    // if (ui->timefb_checkBox->isChecked())
+    // {
+    //   publishFormattedTime(seconds,nanoseconds);
+    //   //qDebug() << "Published relative time:" << QString::number(relative_time, 'f', 3);
+    // }
   }
 
   QFontMetrics fm(timeLine->font());
