@@ -7,6 +7,8 @@ else()
     set(Protobuf_LIBS ${Protobuf_LIBRARIES})
 endif()
 
+set(Protobuf_LIBRARIES /lib/x86_64-linux-gnu/libprotobuf.so)
+
 find_package(Protobuf QUIET)
 
 if( Protobuf_FOUND)
@@ -36,7 +38,7 @@ if( Protobuf_FOUND)
     target_link_libraries(ProtobufParser
         ${Qt5Widgets_LIBRARIES}
         ${Qt5Xml_LIBRARIES}
-        ${Protobuf_LIBS}
+        ${Protobuf_LIBRARIES}
         plotjuggler_base
         plotjuggler_qwt)
 

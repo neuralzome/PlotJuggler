@@ -6,6 +6,7 @@ include_directories( ./ ../  ../include )
 
 QT5_ADD_RESOURCES (RES_SRC  resource.qrc )
 
+
 QT5_WRAP_UI ( UI_SRC
     aboutdialog.ui
     mainwindow.ui
@@ -111,7 +112,19 @@ if (NOT WIN32)
     add_backward(plotjuggler)
 endif()
 
-target_link_libraries(plotjuggler
+find_package(ZeroMQ REQUIRED)
+find_package(zenohc REQUIRED)
+find_package(zenohcxx REQUIRED)
+
+# include_directories(${ZENOHC_INCLUDE_DIRS})
+# link_directories(${ZENOHC_LIBRARY_DIRS})
+
+# include_directories(${ZENOH_INCLUDE_DIRS})
+# link_directories(${ZENOH_LIBRARY_DIRS})
+# message("print ${ZENOHC_LIBRARY_DIRS}")
+
+
+target_link_libraries(plotjuggler PRIVATE
     ${QT_LINK_LIBRARIES}
     colorwidgets
     lua_static
@@ -119,6 +132,8 @@ target_link_libraries(plotjuggler
     plotjuggler_base
     plotjuggler_qwt
     QCodeEditor
+    zmq
+    zenohcxx::zenohc::lib
     )
 
 if(COMPILING_WITH_CATKIN)

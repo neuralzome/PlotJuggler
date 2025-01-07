@@ -26,7 +26,10 @@
 #include <QTreeWidget>
 
 #include "PlotJuggler/svg_util.h"
+#include "zenoh.hxx"
+#include <nlohmann/json.hpp>
 
+#define ZENOHCXX_ZENOHC
 //-------------------------------------------------
 
 CurveListPanel::CurveListPanel(PlotDataMapRef& mapped_plot_data,
@@ -39,6 +42,10 @@ CurveListPanel::CurveListPanel(PlotDataMapRef& mapped_plot_data,
   , _transforms_map(mapped_math_plots)
   , _column_width_dirty(true)
 {
+  session_ = std::make_unique<zenoh::Session>(zenoh::expect<zenoh::Session>(zenoh::open(std::move(conf_))));
+  pub_ = std::make_unique<zenoh::Publisher>(zenoh::expect<zenoh::Publisher>(session_->declare_publisher(zenoh::KeyExprView("time"))));
+
+
   ui->setupUi(this);
 
   setFocusPolicy(Qt::ClickFocus);
@@ -78,6 +85,7 @@ CurveListPanel::CurveListPanel(PlotDataMapRef& mapped_plot_data,
 
 CurveListPanel::~CurveListPanel()
 {
+  this->pub_->delete_resource();
   delete ui;
 }
 
@@ -278,6 +286,20 @@ bool CurveListPanel::is2ndColumnHidden() const
 void CurveListPanel::update2ndColumnValues(double tracker_time)
 {
   _tracker_time = tracker_time;
+  if (ui->timefb_checkBox->isChecked())
+  {
+    nlohmann::json jsonData;
+    jsonData["time"] = _tracker_time;
+    std::string serializedData = jsonData.dump();
+    if (pub_ == nullptr) {
+    qDebug() << "Publisher is not initialized!";}
+  else
+  {
+    
+    pub_->put(serializedData);
+    qDebug() << "Published time: " << _tracker_time;
+  }
+  }
   refreshValues();
 }
 

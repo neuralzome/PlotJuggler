@@ -7,6 +7,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+
 #include <set>
 #include <deque>
 #include <functional>
@@ -32,6 +33,13 @@
 #include "transforms/custom_function.h"
 #include "transforms/function_editor.h"
 
+#include "zmq.hpp"
+
+#define ZENOHCXX_ZENOHC
+
+#include "zenoh.hxx"
+
+
 #include "ui_mainwindow.h"
 
 class MainWindow : public QMainWindow
@@ -53,6 +61,9 @@ public:
   void enableStreamingNotificationsButton(bool enabled);
 
   void setStatusBarMessage(QString message);
+
+  void publishFormattedTime();
+
 
 public slots:
 
@@ -181,8 +192,25 @@ private:
 
   QString _skin_path;
 
+  zmq::context_t zmq_context;       // ZMQ context
+  zmq::socket_t zmq_publisher;     // ZMQ publisher socket
+  // zenoh::Config conf_;
+  
+  // this->session_ = std::make_unique<zenoh::Session>(
+  //       zenoh::expect<zenoh::Session>(zenoh::open(std::move(conf_))));
+  // this->pub_ = std::make_unique<zenoh::Publisher>(
+  //       zenoh::expect<zenoh::Publisher>(
+  //           this->session_->declare_publisher(zenoh::KeyExprView("/time"))));
+  
+  // std::unique_ptr<zenoh::Session> session_;
+  // std::unique_ptr<zenoh::Publisher> pub_;
+
+
+
   void initializeActions();
   QStringList initializePlugins(QString subdir_name);
+
+  void publishFormattedTime(uint64_t seconds, uint64_t nanoseconds);
 
   void forEachWidget(std::function<void(PlotWidget*, PlotDocker*, int)> op);
   void forEachWidget(std::function<void(PlotWidget*)> op);

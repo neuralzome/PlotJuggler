@@ -21,6 +21,10 @@
 #include "curvetree_view.h"
 #include <array>
 
+#define ZENOHCXX_ZENOHC
+
+#include "zenoh.hxx"
+
 namespace Ui
 {
 class CurveListPanel;
@@ -100,7 +104,9 @@ private:
   std::unordered_set<std::string> _tree_view_items;
 
   double _tracker_time = 0;
-
+  zenoh::Config conf_;
+  std::unique_ptr<zenoh::Session> session_;
+  std::unique_ptr<zenoh::Publisher> pub_;
   const TransformsMap& _transforms_map;
 
   QString _style_dir;
